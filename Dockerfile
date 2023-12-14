@@ -8,14 +8,15 @@ RUN apt-get update && apt-get install -y \
     libblas-dev \
     liblapack-dev \
     gfortran \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 ENV PIP_NO_CACHE_DIR=1
-RUN pip install --no-cache-dir \
+RUN pip install \
     spatialprofilingtoolbox[cggnn] \
-    cggnn
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir dgl -f https://data.dgl.ai/wheels/repo.html
-RUN pip install --no-cache-dir dglgo -f https://data.dgl.ai/wheels-test/repo.html
+    cg-gnn>=0.3.1
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install dgl -f https://data.dgl.ai/wheels/repo.html
+RUN pip install dglgo -f https://data.dgl.ai/wheels-test/repo.html
 ENV DGLBACKEND=pytorch
 
 EXPOSE 80
