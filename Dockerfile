@@ -17,8 +17,7 @@ ENV DGLBACKEND=pytorch
 RUN pip install \
     spatialprofilingtoolbox[cggnn]>=0.17.3 \
     cg-gnn>=0.3.1
-
+ADD . /app
 EXPOSE 80
 
 ENTRYPOINT ["python", "main.py"]
-CMD ["--cg_directory", ".", "-b", "1", "--epochs", "10", "-l", "0.001", "-k", "0"]
