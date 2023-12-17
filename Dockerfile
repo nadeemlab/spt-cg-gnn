@@ -18,6 +18,6 @@ RUN pip install \
     spatialprofilingtoolbox[cggnn]>=0.17.3 \
     cg-gnn>=0.3.1
 ADD . /app
+RUN chmod +x train.py
+RUN mv train.py /usr/local/bin/spt-plugin-train-on-graphs
 EXPOSE 80
-
-ENTRYPOINT ["python", "main.py"]

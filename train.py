@@ -1,4 +1,8 @@
-"""Helper functions to translate SPT HSGraphs and prepare them for CG-GNN training."""
+#!/usr/bin/env python3
+"""Convert SPT graph objects to CG-GNN graph objects and run training and evaluation with them."""
+
+from os import remove
+from os.path import join, exists
 
 from numpy import nonzero  # type: ignore
 from networkx import to_scipy_sparse_array  # type: ignore
@@ -7,10 +11,13 @@ from torch import (
     IntTensor,  # type: ignore
 )
 from dgl import DGLGraph, graph
-from spatialprofilingtoolbox.cggnn.util import HSGraph, GraphData as SPTGraphData
+from spatialprofilingtoolbox.cggnn.util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, \
+    save_hs_graphs
 
-from cggnn.util import GraphData
+from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
+from cggnn.run import train_and_evaluate
+from cggnn.scripts.train import parse_arguments
 
 
 def convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
@@ -67,3 +74,27 @@ def convert_dgl_graph_data(g_dgl: GraphData) -> SPTGraphData:
 def convert_dgl_graphs_data(graphs_data: list[GraphData]) -> list[SPTGraphData]:
     """Convert a list of DGLGraphs to CG-GNN cell graphs."""
     return [convert_dgl_graph_data(g_dgl) for g_dgl in graphs_data]
+
+
+if __name__ == '__main__':
+    args = parse_arguments()
+
+    save_cell_graphs(convert_spt_graphs_data(load_hs_graphs(args.cg_directory)[0]),
+                     args.cg_directory)
+
+    model, graphs_data, hs_id_to_importances = train_and_evaluate(args.cg_directory,
+                                                                  args.in_ram,
+                                                                  args.batch_size,
+                                                                  args.epochs,
+                                                                  args.learning_rate,
+                                                                  args.k_folds,
+                                                                  args.explainer,
+                                                                  args.merge_rois,
+                                                                  args.random_seed)
+
+    save_hs_graphs(convert_dgl_graphs_data(load_cell_graphs(args.cg_directory)[0]),
+                   args.cg_directory)
+    for filename in ('graphs.bin', 'graph_info.pkl'):
+        graphs_file = join(args.cg_directory, filename)
+        if exists(graphs_file):
+            remove(graphs_file)
