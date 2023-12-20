@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 ENV PIP_NO_CACHE_DIR=1
 RUN pip install \
-    spatialprofilingtoolbox[cggnn] \
+    spatialprofilingtoolbox[cggnn]>=0.17.4 \
     cg-gnn>=0.3.1
 RUN pip install dgl -f https://data.dgl.ai/wheels/cu118/repo.html
 RUN pip install dglgo -f https://data.dgl.ai/wheels-test/repo.html
