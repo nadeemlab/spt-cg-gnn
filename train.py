@@ -54,10 +54,11 @@ def convert_dgl_graph(g_dgl: DGLGraph) -> HSGraph:
     """Convert a DGLGraph to a CG-GNN cell graph."""
     return HSGraph(
         adj=to_scipy_sparse_array(g_dgl.to_networkx()),
-        node_features=g_dgl.ndata[FEATURES],
-        centroids=g_dgl.ndata[CENTROIDS],
-        histological_structure_ids=g_dgl.ndata[INDICES],
-        importances=g_dgl.ndata[IMPORTANCES] if (IMPORTANCES in g_dgl.ndata) else None,
+        node_features=g_dgl.ndata[FEATURES].detach().cpu().numpy(),
+        centroids=g_dgl.ndata[CENTROIDS].detach().cpu().numpy(),
+        histological_structure_ids=g_dgl.ndata[INDICES].detach().cpu().numpy(),
+        importances=g_dgl.ndata[IMPORTANCES].detach().cpu().numpy() if (IMPORTANCES in g_dgl.ndata)
+        else None,
     )
 
 
