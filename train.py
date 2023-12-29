@@ -5,6 +5,8 @@ from sys import path
 from configparser import ConfigParser
 from os import remove
 from os.path import join, exists
+from configparser import ConfigParser
+from warnings import warn
 
 from numpy import nonzero  # type: ignore
 from networkx import to_scipy_sparse_array  # type: ignore
@@ -20,10 +22,10 @@ from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
 from cggnn.run import train_and_evaluate
 path.append('/app')
-from train_cli import parse_arguments
+from train_cli import parse_arguments, DEFAULT_CONFIG_FILE
 
 
-def convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
+def _convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
     """Convert a SPT HSGraph to a CG-GNN cell graph."""
     num_nodes = g_spt.node_features.shape[0]
     g_dgl = graph([])
@@ -37,10 +39,10 @@ def convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
     return g_dgl
 
 
-def convert_spt_graph_data(g_spt: SPTGraphData) -> GraphData:
+def _convert_spt_graph_data(g_spt: SPTGraphData) -> GraphData:
     """Convert a SPT GraphData object to a CG-GNN/DGL GraphData object."""
     return GraphData(
-        graph=convert_spt_graph(g_spt.graph),
+        graph=_convert_spt_graph(g_spt.graph),
         label=g_spt.label,
         name=g_spt.name,
         specimen=g_spt.specimen,
@@ -48,12 +50,12 @@ def convert_spt_graph_data(g_spt: SPTGraphData) -> GraphData:
     )
 
 
-def convert_spt_graphs_data(graphs_data: list[SPTGraphData]) -> list[GraphData]:
+def _convert_spt_graphs_data(graphs_data: list[SPTGraphData]) -> list[GraphData]:
     """Convert a list of SPT HSGraphs to CG-GNN cell graphs."""
-    return [convert_spt_graph_data(g_spt) for g_spt in graphs_data]
+    return [_convert_spt_graph_data(g_spt) for g_spt in graphs_data]
 
 
-def convert_dgl_graph(g_dgl: DGLGraph) -> HSGraph:
+def _convert_dgl_graph(g_dgl: DGLGraph) -> HSGraph:
     """Convert a DGLGraph to a CG-GNN cell graph."""
     return HSGraph(
         adj=to_scipy_sparse_array(g_dgl.to_networkx()),
@@ -65,9 +67,9 @@ def convert_dgl_graph(g_dgl: DGLGraph) -> HSGraph:
     )
 
 
-def convert_dgl_graph_data(g_dgl: GraphData) -> SPTGraphData:
+def _convert_dgl_graph_data(g_dgl: GraphData) -> SPTGraphData:
     return SPTGraphData(
-        graph=convert_dgl_graph(g_dgl.graph),
+        graph=_convert_dgl_graph(g_dgl.graph),
         label=g_dgl.label,
         name=g_dgl.name,
         specimen=g_dgl.specimen,
@@ -75,30 +77,53 @@ def convert_dgl_graph_data(g_dgl: GraphData) -> SPTGraphData:
     )
 
 
-def convert_dgl_graphs_data(graphs_data: list[GraphData]) -> list[SPTGraphData]:
+def _convert_dgl_graphs_data(graphs_data: list[GraphData]) -> list[SPTGraphData]:
     """Convert a list of DGLGraphs to CG-GNN cell graphs."""
-    return [convert_dgl_graph_data(g_dgl) for g_dgl in graphs_data]
+    return [_convert_dgl_graph_data(g_dgl) for g_dgl in graphs_data]
+
+
+def _handle_random_seed_values(random_seed_value: str | None) -> int | None:
+    if (random_seed_value is not None) and (str(random_seed_value).strip().lower() != "none"):
+        return int(random_seed_value)
+    return None
 
 
 if __name__ == '__main__':
     args = parse_arguments()
     config_file = ConfigParser()
     config_file.read(args.config_file)
+    random_seed: int | None = None
+    if 'general' in config_file:
+        random_seed = _handle_random_seed_values(config_file['general'].get('random_seed', None))
+    if 'cg-gnn' not in config_file:
+        warn('No cg-gnn section in config file. Using default values.')
+        config_file.read(DEFAULT_CONFIG_FILE)
+    config = config_file['cg-gnn']
 
-    save_cell_graphs(convert_spt_graphs_data(load_hs_graphs(args.input_directory)[0]),
+    in_ram: bool = config.getboolean('in_ram', True)
+    batch_size: int = config.getint('batch_size', 32)
+    epochs: int = config.getint('epochs', 10)
+    learning_rate: float = config.getfloat('learning_rate', 1e-3)
+    k_folds: int = config.getint('k_folds', 5)
+    explainer: str = config.get('explainer', 'pp')
+    merge_rois: bool = config.getboolean('merge_rois', True)
+    if random_seed is None:
+        random_seed = _handle_random_seed_values(config.get('random_seed', None))
+
+    save_cell_graphs(_convert_spt_graphs_data(load_hs_graphs(args.input_directory)[0]),
                      args.output_directory)
 
     model, graphs_data, hs_id_to_importances = train_and_evaluate(args.output_directory,
-                                                                  args.in_ram,
-                                                                  args.batch_size,
-                                                                  args.epochs,
-                                                                  args.learning_rate,
-                                                                  args.k_folds,
-                                                                  args.explainer,
-                                                                  args.merge_rois,
-                                                                  args.random_seed)
+                                                                  in_ram,
+                                                                  batch_size,
+                                                                  epochs,
+                                                                  learning_rate,
+                                                                  k_folds,
+                                                                  explainer,
+                                                                  merge_rois,
+                                                                  random_seed)
 
-    save_hs_graphs(convert_dgl_graphs_data(load_cell_graphs(args.output_directory)[0]),
+    save_hs_graphs(_convert_dgl_graphs_data(load_cell_graphs(args.output_directory)[0]),
                    args.output_directory)
     for filename in ('graphs.bin', 'graph_info.pkl'):
         graphs_file = join(args.output_directory, filename)
