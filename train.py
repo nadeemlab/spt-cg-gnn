@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Convert SPT graph objects to CG-GNN graph objects and run training and evaluation with them."""
 
+from sys import path
+from configparser import ConfigParser
 from os import remove
 from os.path import join, exists
 
@@ -17,7 +19,8 @@ from spatialprofilingtoolbox.cggnn.util import HSGraph, GraphData as SPTGraphDat
 from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
 from cggnn.run import train_and_evaluate
-from cggnn.scripts.train import parse_arguments
+path.append('/app')
+from train_cli import parse_arguments
 
 
 def convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
@@ -79,11 +82,13 @@ def convert_dgl_graphs_data(graphs_data: list[GraphData]) -> list[SPTGraphData]:
 
 if __name__ == '__main__':
     args = parse_arguments()
+    config_file = ConfigParser()
+    config_file.read(args.config_file)
 
-    save_cell_graphs(convert_spt_graphs_data(load_hs_graphs(args.cg_directory)[0]),
-                     args.cg_directory)
+    save_cell_graphs(convert_spt_graphs_data(load_hs_graphs(args.input_directory)[0]),
+                     args.output_directory)
 
-    model, graphs_data, hs_id_to_importances = train_and_evaluate(args.cg_directory,
+    model, graphs_data, hs_id_to_importances = train_and_evaluate(args.output_directory,
                                                                   args.in_ram,
                                                                   args.batch_size,
                                                                   args.epochs,
@@ -93,9 +98,9 @@ if __name__ == '__main__':
                                                                   args.merge_rois,
                                                                   args.random_seed)
 
-    save_hs_graphs(convert_dgl_graphs_data(load_cell_graphs(args.cg_directory)[0]),
-                   args.cg_directory)
+    save_hs_graphs(convert_dgl_graphs_data(load_cell_graphs(args.output_directory)[0]),
+                   args.output_directory)
     for filename in ('graphs.bin', 'graph_info.pkl'):
-        graphs_file = join(args.cg_directory, filename)
+        graphs_file = join(args.output_directory, filename)
         if exists(graphs_file):
             remove(graphs_file)
