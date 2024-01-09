@@ -31,4 +31,4 @@ RUN mv train.py /usr/local/bin/spt-plugin-train-on-graphs
 RUN chmod +x /app/print_graph_config.sh
 RUN mv /app/print_graph_config.sh /usr/local/bin/spt-plugin-print-graph-request-configuration
 RUN chmod +x /app/print_training_config.sh
-RUN mv /app/print_graph_config.sh /usr/local/bin/spt-plugin-print-training-configuration
+RUN mv /app/print_training_config.sh /usr/local/bin/spt-plugin-print-training-configuration
