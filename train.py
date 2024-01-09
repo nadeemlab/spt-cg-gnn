@@ -15,8 +15,7 @@ from torch import (
     IntTensor,  # type: ignore
 )
 from dgl import DGLGraph, graph
-from spatialprofilingtoolbox.cggnn.util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, \
-    save_hs_graphs
+from util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, save_hs_graphs
 
 from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
