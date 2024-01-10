@@ -116,10 +116,11 @@ def load_graph_data(filename: str) -> GraphData:
         importances: NDArray[float_] = \
             f['graph/importances'][()] if 'graph/importances' in f else None
 
-        label: int | None = f['label'][()]
-        name: str = f['name'][()]
-        specimen: str = f['specimen'][()]
-        set: SETS_type = f['set'][()]
+        # h5 files store strings as byte arrays
+        label: int | None = f['label'][()].decode()
+        name: str = f['name'][()].decode()
+        specimen: str = f['specimen'][()].decode()
+        set: SETS_type = f['set'][()].decode()
 
     graph = HSGraph(adj, node_features, centroids, histological_structure_ids, importances)
     return GraphData(graph, label, name, specimen, set)
