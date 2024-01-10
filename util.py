@@ -117,7 +117,7 @@ def load_graph_data(filename: str) -> GraphData:
             f['graph/importances'][()] if 'graph/importances' in f else None
 
         # h5 files store strings as byte arrays
-        label: int | None = f['label'][()].decode()
+        label: int | None = f['label'][()]
         name: str = f['name'][()].decode()
         specimen: str = f['specimen'][()].decode()
         set: SETS_type = f['set'][()].decode()
