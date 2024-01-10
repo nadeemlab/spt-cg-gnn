@@ -15,13 +15,13 @@ from torch import (
     IntTensor,  # type: ignore
 )
 from dgl import DGLGraph, graph
-from util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, save_hs_graphs
-
 from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
 from cggnn.run import train_and_evaluate
+
 path.append('/app')
 from train_cli import parse_arguments, DEFAULT_CONFIG_FILE
+from util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, save_hs_graphs
 
 
 def _convert_spt_graph(g_spt: HSGraph) -> DGLGraph:
