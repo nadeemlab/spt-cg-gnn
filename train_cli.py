@@ -18,7 +18,6 @@ def parse_arguments():
         '--config_file',
         type=str,
         help='Path to config file.',
-        optional=True,
         default=DEFAULT_CONFIG_FILE,
     )
     arg_parser.add_argument(
