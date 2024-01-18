@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime
 WORKDIR /app
 
 # Install apt packages you need here, and then clean up afterward
@@ -20,7 +20,7 @@ RUN pip install scipy==1.10.1
 RUN pip install dgl -f https://data.dgl.ai/wheels/cu118/repo.html
 RUN pip install dglgo -f https://data.dgl.ai/wheels-test/repo.html
 ENV DGLBACKEND=pytorch
-RUN pip install cg-gnn
+RUN pip install cg-gnn==0.3.2
 
 # Make the files you need in this directory available everywhere in the container
 ADD . /app
