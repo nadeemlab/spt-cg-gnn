@@ -19,7 +19,7 @@ from cggnn.util import GraphData, save_cell_graphs, load_cell_graphs
 from cggnn.util.constants import INDICES, CENTROIDS, FEATURES, IMPORTANCES
 from cggnn.run import train_and_evaluate
 
-path.append('/app')
+path.append('/app')  # noqa
 from train_cli import parse_arguments, DEFAULT_CONFIG_FILE
 from util import HSGraph, GraphData as SPTGraphData, load_hs_graphs, save_hs_graphs
 
@@ -109,8 +109,8 @@ if __name__ == '__main__':
     if random_seed is None:
         random_seed = _handle_random_seed_values(config.get('random_seed', None))
 
-    save_cell_graphs(_convert_spt_graphs_data(load_hs_graphs(args.input_directory)[0]),
-                     args.output_directory)
+    spt_graphs, _ = load_hs_graphs(args.input_directory)
+    save_cell_graphs(_convert_spt_graphs_data(spt_graphs), args.output_directory)
 
     model, graphs_data, hs_id_to_importances = train_and_evaluate(args.output_directory,
                                                                   in_ram,
